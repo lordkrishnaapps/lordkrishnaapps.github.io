@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Entry and Excel Export</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-image: url('/Users/krishna/Downloads/lordkrishnalogo.jpeg'); /* Add your image URL here */
+      background-size: contain; /* Adjusted background size */
+      background-repeat: no-repeat; /* Prevent repeating the background */
+      background-position: center;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      text-align: center;
+      color: black;
+      margin-bottom: 20px;
+    }
+
+    form {
+      background-color: rgba(255, 255, 255, 0.8); /* Set the background color with opacity */
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 16px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      background-color: #4caf50;
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Lord Krishna Field Visit App</h1>
+
+  <form id="dataForm">
+    <!-- Generate input fields dynamically based on fieldNames array -->
+    <div id="fields"></div>
+
+    <button type="button" onclick="exportToExcel()">Export to Excel</button>
+  </form>
+
+  <script>
+    const fieldNames = [
+        "Client/Owner/Representative Name",
+    "Serial Number",
+    "Bank/Branch Name",
+    "Contact Number",
+    "Plot No",
+    "Plot Area",
+    "Location(Mention Tole Name)",
+    "Boundaries analysis of plot",
+    "Dimension-According-Field-East-Face",
+    "Dimension-According-Field-West-Face",
+    "Dimension-According-Field-North-Face",
+    "Dimension-According-Field-South-Face",
+    "Dimension-Cadastral-Map-East-Face",
+    "Dimension-Cadastral-Map-West-Face",
+    "Dimension-Cadastral-Map-North-Face",
+    "Dimension-Cadastral-Map-South-Face",
+    "Width-of-Road-Cadastral-Map-East-Face",
+    "Width-of-Road-Cadastral-Map-West-Face",
+    "Width-of-Road-Cadastral-Map-North-Face",
+    "Width-of-Road-Cadastral-Map-South-Face",
+    "Width-of-Road-Rightof-Way-East-Face",
+    "Width-of-Road-Rightof-Way-West-Face",
+    "Width-of-Road-Rightof-Way-North-Face",
+    "Width-of-Road-Rightof-Way-South-Face",
+    "Width-of-Road-TypeOf-Road-East-Face",
+    "Width-of-Road-TypeOf-Road-West-Face",
+    "Width-of-Road-TypeOf-Road-North-Face",
+    "Width-of-Road-TypeOf-Road-South-Face",
+    "Others factor Affecting property(River/Kholshi, High Tension, etc.)",
+    "Current Land Status",
+    "Current Land Use",
+    "Current Land Grading",
+    "Current Surrounding Property",
+    "Requirement of Filling",
+    "Importance of Area",
+    "Weather all documents required for validation is provided & village name, ward no, district name, sheet no, plot no & surrounding plot match?",
+    "Weather shape of land & surrounding features match with cadastral map?",
+    "What is the distance of plot from nearest landmarks & what are the reference point which you have taken to confirm the Plot under valuation? Mention distance",
+    "High Tension Line",
+    "Nearness of River/Possibility of Landslide/Flood",
+    "Distance from international Border/Railway Alignment",
+    "Government notification/Land Acquisition/Monument area/army barracks/sewage dumping/water logging/etc.",
+    "Have you taken pictures of the subject property?(4 sides, with Owner/Client, Road Access, Main Features, etc.)",
+    "Have you taken Google coordinates? Also draw location Plan",
+    "Building constructed as per approved drawing",
+    "Construction Completion certificate",
+    "Type of Structure",
+    "Year of Completion",
+    "Completed Number of Floors",
+    "Requirement of Maintenance",
+    "Finding of Market rate from Neighbourhood(Person-1)",
+    "Finding of Market rate from Neighbourhood(Person-2)",
+    "Finding of Market rate from Neighbourhood(Person-3)",
+    "Finding of Market rate from Neighbourhood(Person-4)",
+    "Finding of Market rate from Neighbourhood(Person-5)",
+    "Valuer’s Opinion",
+    "Explain the Bases of Value",
+    "Valuator Name",
+    "DateTime"
+    ];
+
+    // Function to dynamically generate input fields
+    function generateFields() {
+      let fieldsDiv = document.getElementById('fields');
+
+      for (let i = 0; i < fieldNames.length; i++) {
+        let label = document.createElement('label');
+        label.textContent = `${fieldNames[i]}: `;
+        
+        let input = document.createElement('input');
+        input.type = (fieldNames[i] === "DateTime") ? 'datetime-local' : 'text';
+        input.name = fieldNames[i];
+
+        fieldsDiv.appendChild(label);
+        fieldsDiv.appendChild(input);
+        fieldsDiv.appendChild(document.createElement('br'));
+      }
+    }
+
+    // Function to export data to Excel
+// Function to export data to Excel
+function exportToExcel() {
+  let data = {};
+
+  // Collect data from input fields
+  for (let i = 0; i < fieldNames.length; i++) {
+    let fieldName = fieldNames[i];
+    let fieldValue = document.getElementsByName(fieldName)[0].value;
+    data[fieldName] = fieldValue;
+  }
+
+  // Extract the entered name
+  let enteredName = data["Name"] || "Unknown"; // Use "Unknown" if the Name field is empty
+
+  // Get today's date
+  let today = new Date();
+  let dd = String(today.getDate()).padStart(2, '0');
+  let mm = String(today.getMonth() + 1).padStart(2, '0'); // January is 0!
+  let yyyy = today.getFullYear();
+  let currentTime = new Date().toLocaleTimeString();
+  today = yyyy + mm + dd + currentTime;
+
+  // Folder path for the generated Excel file
+  let folderPath = 'FieldReport';
+
+  // Create a worksheet
+  let ws = XLSX.utils.json_to_sheet([data]);
+
+  // Create a workbook
+  let workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, ws, 'Sheet1');
+
+  // Save as Excel file with a name based on the entered name and the current date inside the specified folder
+  XLSX.writeFile(workbook, `${folderPath}/output_data_${enteredName}_${today}.xlsx`);
+}
+
+
+    // Generate input fields when the page loads
+    window.onload = function() {
+      generateFields();
+    };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+
+</body>
+</html>
