@@ -69,8 +69,27 @@
     <!-- Generate input fields dynamically based on fieldNames array -->
     <div id="fields"></div>
 
+<!-- Input fields for image selection -->
+<!-- <label for="Image_East">Image_East: </label>
+<input type="file" name="Image_East" accept="image/*">
+<br>
+
+<label for="Image_West">Image_West: </label>
+<input type="file" name="Image_West" accept="image/*">
+<br>
+
+<label for="Image_North">Image_North: </label>
+<input type="file" name="Image_North" accept="image/*">
+<br>
+
+<label for="Image_South">Image_South: </label>
+<input type="file" name="Image_South" accept="image/*">
+<br> -->
+
     <button type="button" onclick="exportToExcel()">Export to Excel</button>
   </form>
+
+  
 
   <script>
     const fieldNames = [
@@ -117,11 +136,12 @@
       "Valuer’s Opinion",
       "Explain the Bases of Value",
       "Valuator Name",
+      "GPS Coordinates",
       "DateTime"
     ];
 
-    // Function to dynamically generate input fields
-    function generateFields() {
+ // Function to dynamically generate input fields
+ function generateFields() {
       let fieldsDiv = document.getElementById('fields');
 
       for (let i = 0; i < fieldNames.length; i++) {
@@ -140,9 +160,35 @@
         fieldsDiv.appendChild(input);
         fieldsDiv.appendChild(document.createElement('br'));
       }
+
+      // Special handling for the GPS Coordinates field
+      let gpsLabel = document.createElement('label');
+      gpsLabel.textContent = "GPS Coordinates: ";
+      fieldsDiv.appendChild(gpsLabel);
+
+      let gpsInput = document.createElement('input');
+      gpsInput.type = 'text';
+      gpsInput.name = 'GPS Coordinates';
+      gpsInput.readOnly = true; // Make the input field read-only
+      fieldsDiv.appendChild(gpsInput);
+      fieldsDiv.appendChild(document.createElement('br'));
+
+      // Fetch GPS coordinates automatically
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+          gpsInput.value = `${latitude}, ${longitude}`;
+        },
+        (error) => {
+          console.error(error);
+          gpsInput.value = "Unable to retrieve GPS coordinates";
+        }
+      );
     }
 
     // Function to export data to Excel
+// Function to export data to Excel
 // Function to export data to Excel
 function exportToExcel() {
   let rowData = {};
@@ -160,6 +206,28 @@ function exportToExcel() {
     return;
   }
 
+  // Fetch GPS coordinates and add to the data
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+      rowData["GPS Coordinates"] = `${latitude}, ${longitude}`;
+
+      // Continue with the Excel export logic
+      continueExportToExcel(rowData);
+    },
+    (error) => {
+      console.error(error);
+      rowData["GPS Coordinates"] = "Unable to retrieve GPS coordinates";
+
+      // Continue with the Excel export logic
+      continueExportToExcel(rowData);
+    }
+  );
+}
+
+// Helper function to continue with the Excel export logic
+function continueExportToExcel(rowData) {
   // Extract the entered name
   let enteredName = rowData["Client/Owner/Representative Name"] || "Unknown";
 
@@ -183,7 +251,7 @@ function exportToExcel() {
   // Iterate over all fields and collect data
   for (let i = 0; i < fieldNames.length; i++) {
     let field = fieldNames[i];
-    
+
     // Check if the field is already added to the rows
     if (!uniqueFields.has(field)) {
       rows.push({ "Field": field, "Value": rowData[field] || "" });
@@ -191,17 +259,8 @@ function exportToExcel() {
     }
   }
 
-  // Check if there is existing data in local storage
-//   let storedData = JSON.parse(localStorage.getItem('fieldReportData')) || [];
-
-  // Concatenate the current row data with existing data
-  let newData = rows
-
-  // Save the updated data to local storage
-  localStorage.setItem('fieldReportData', JSON.stringify(newData));
-
   // Create a worksheet with only the "Field" and "Value" columns
-  let ws = XLSX.utils.json_to_sheet(newData.map(({ Field, Value }) => ({ Field, Value })));
+  let ws = XLSX.utils.json_to_sheet(rows.map(({ Field, Value }) => ({ Field, Value })));
 
   // Create a workbook
   let workbook = XLSX.utils.book_new();
@@ -210,6 +269,7 @@ function exportToExcel() {
   // Save as Excel file with a name based on the entered name and the current date inside the specified folder
   XLSX.writeFile(workbook, `${folderPath}/output_data_${enteredName}_${today}.xlsx`);
 }
+
 
 
     // Generate input fields when the page loads
